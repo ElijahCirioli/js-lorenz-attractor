@@ -1,7 +1,52 @@
 body {
 	margin: 0;
+	display: block;
+	font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana,
+		sans-serif;
 }
 #myCanvas {
 	background-color: black;
 	margin: 0;
+}
+#slider-wrap {
+	width: 500px;
+	margin: 10px 0;
+}
+#slider-wrap input {
+	width: 76%;
+	margin: 0;
+}
+#slider-wrap label {
+	float: right;
+	margin: 0;
+	line-height: 16px;
+}
+#buttons-wrap {
+	margin: 0;
+	width: 500px;
+}
+#buttons-wrap button {
+	float: right;
+	margin-left: 10px;
+	font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana,
+		sans-serif;
+	background-color: #1c74d4;
+	color: white;
+	outline: none;
+	border: none;
+	cursor: pointer;
+	padding: 3px 10px;
+	border-radius: 3px;
+	transition: 0.1s;
+}
+#buttons-wrap button:active {
+	transform: scale(0.95);
+}
+#fps-holder {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+input {
+	cursor: pointer;
 }

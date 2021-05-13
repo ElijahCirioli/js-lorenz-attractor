@@ -9,7 +9,22 @@
 		<script src="https://cdn.jsdelivr.net/npm/stats-js@1.0.1/build/stats.min.js"></script>
 	</head>
 	<body>
+		<div id="fps-holder"></div>
 		<canvas id="myCanvas" width="500" height="500"></canvas>
+		<div id="slider-wrap">
+			<input type="range" id="number" name="number" min="1" max="500" value="150" />
+			<label id="label" for="number">100 particles</label>
+		</div>
+		<div id="buttons-wrap">
+			<input type="checkbox" name="trails" id="trails" checked="true" />
+			<label for="trails">Trails</label>
+			<input type="checkbox" name="points" id="points" checked="true" />
+			<label for="points">Points</label>
+			<input type="checkbox" name="fps" id="fps" checked="true" />
+			<label for="fps">FPS Counter</label>
+			<button id="reset">Reset</button>
+			<button id="play">Stop</button>
+		</div>
 		<script type="module" src="index.js"></script>
 	</body>
 </html>

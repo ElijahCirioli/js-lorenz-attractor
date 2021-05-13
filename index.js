@@ -9,10 +9,12 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
 
 const controls = new OrbitControls(camera, canvas);
 
-let particles, stats;
+let particles, stats, numParticles;
+let showTrails = true;
+let playing = true;
+
 const dt = 0.002;
-const maxTrailLength = 120;
-const numParticles = 100;
+const maxTrailLength = 100;
 const rho = 28;
 const sigma = 10;
 const beta = 8 / 3;
@@ -52,11 +54,14 @@ class Particle {
 		if (this.numPoints < maxTrailLength) this.numPoints++;
 		const speed = Math.ceil(Math.sqrt(new THREE.Vector3(dx, dy, dz).length()) * 15);
 
-		this.trail.geometry.setDrawRange(0, Math.min(speed, this.numPoints));
-
-		const pos = this.trail.geometry.attributes.position;
-		pos.array = this.trailPoints;
-		pos.needsUpdate = true;
+		if (showTrails) {
+			this.trail.geometry.setDrawRange(0, Math.min(speed, this.numPoints));
+			const pos = this.trail.geometry.attributes.position;
+			pos.array = this.trailPoints;
+			pos.needsUpdate = true;
+		} else {
+			this.trail.geometry.setDrawRange(0, 0);
+		}
 	}
 
 	createShape() {
@@ -90,25 +95,23 @@ class Particle {
 }
 
 const reset = () => {
-	particles = [];
-
-	for (let i = 0; i < numParticles; i++) {
-		particles.push(new Particle());
+	//remove all children
+	while (scene.children.length) {
+		scene.remove(scene.children[0]);
 	}
 
-	stats = new Stats();
-	stats.showPanel(0);
-	document.body.appendChild(stats.dom);
-
-	requestAnimationFrame(animate);
+	particles = [];
+	updateSlider();
 };
 
 const animate = () => {
 	stats.begin();
 
-	particles.forEach((p) => {
-		p.move();
-	});
+	if (playing) {
+		particles.forEach((p) => {
+			p.move();
+		});
+	}
 
 	renderer.render(scene, camera); //render the scene
 
@@ -116,4 +119,60 @@ const animate = () => {
 	requestAnimationFrame(animate);
 };
 
-document.onload = reset();
+const updateSlider = () => {
+	numParticles = document.getElementById("number").value;
+	if (numParticles === 1) {
+		document.getElementById("label").textContent = "1 particle";
+	} else {
+		document.getElementById("label").textContent = `${numParticles} particles`;
+	}
+
+	if (particles.length < numParticles) {
+		for (let i = particles.length; i < numParticles; i++) {
+			particles.push(new Particle());
+		}
+	} else if (particles.length > numParticles) {
+		for (let i = particles.length - 1; i >= numParticles; i--) {
+			const p = particles[i];
+			scene.remove(p.trail);
+			scene.remove(p.shape);
+			particles.splice(i, 1);
+		}
+	}
+};
+
+document.getElementById("number").addEventListener("input", updateSlider);
+document.getElementById("reset").addEventListener("click", reset);
+document.getElementById("trails").addEventListener("input", function () {
+	showTrails = this.checked;
+});
+document.getElementById("points").addEventListener("input", function () {
+	particles.forEach((p) => {
+		p.shape.visible = this.checked;
+	});
+});
+document.getElementById("fps").addEventListener("input", function () {
+	if (this.checked) {
+		document.getElementById("fps-holder").style.display = "block";
+	} else {
+		document.getElementById("fps-holder").style.display = "none";
+	}
+});
+document.getElementById("play").addEventListener("click", function () {
+	if (playing) {
+		this.textContent = "Play";
+	} else {
+		this.textContent = "Stop";
+	}
+	playing = !playing;
+});
+
+window.onload = () => {
+	reset();
+
+	stats = new Stats();
+	stats.showPanel(0);
+	document.getElementById("fps-holder").appendChild(stats.dom);
+
+	requestAnimationFrame(animate);
+};
