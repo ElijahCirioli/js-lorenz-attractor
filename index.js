@@ -9,10 +9,12 @@ const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
 
 const controls = new OrbitControls(camera, canvas);
 
+//global variables
 let particles, stats, numParticles;
 let showTrails = true;
 let playing = true;
 
+//constants
 const dt = 0.002;
 const maxTrailLength = 100;
 const rho = 28;
@@ -32,10 +34,12 @@ class Particle {
 	}
 
 	move() {
+		//the actual lorenz equations
 		const dx = sigma * (this.pos.y - this.pos.x);
 		const dy = this.pos.x * (rho - this.pos.z) - this.pos.y;
 		const dz = this.pos.x * this.pos.y - beta * this.pos.z;
 
+		//move the particle
 		this.pos.x += dx * dt;
 		this.pos.y += dy * dt;
 		this.pos.z += dz * dt;
@@ -54,6 +58,7 @@ class Particle {
 		if (this.numPoints < maxTrailLength) this.numPoints++;
 		const speed = Math.ceil(Math.sqrt(new THREE.Vector3(dx, dy, dz).length()) * 15);
 
+		//display trail (if applicable)
 		if (showTrails) {
 			this.trail.geometry.setDrawRange(0, Math.min(speed, this.numPoints));
 			const pos = this.trail.geometry.attributes.position;
@@ -64,6 +69,7 @@ class Particle {
 		}
 	}
 
+	//create THREE.js shape for point
 	createShape() {
 		const geometry = new THREE.SphereGeometry(0.2, 16, 16);
 		const material = new THREE.MeshBasicMaterial({ color: "#16e086" });
@@ -73,12 +79,15 @@ class Particle {
 		return shape;
 	}
 
+	//create THREE.js shape for trail
 	createTrail() {
+		//randomly assign color
 		const material = new THREE.LineBasicMaterial({
 			color: `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`,
 		});
 		const geometry = new THREE.BufferGeometry();
 
+		//we can't do this as an array of vectors which is annoying
 		this.trailPoints = new Float32Array(maxTrailLength * 3);
 		for (let i = 0; i < maxTrailLength * 3; i += 3) {
 			this.trailPoints[i] = this.pos.x;
@@ -100,8 +109,8 @@ const reset = () => {
 		scene.remove(scene.children[0]);
 	}
 
-	particles = [];
-	updateSlider();
+	particles = []; //empty particle array
+	updateSlider(); //add particles from slider value
 };
 
 const animate = () => {
@@ -114,19 +123,21 @@ const animate = () => {
 	}
 
 	renderer.render(scene, camera); //render the scene
-
 	stats.end();
 	requestAnimationFrame(animate);
 };
 
+//update the slider that controls how many particles there are
 const updateSlider = () => {
 	numParticles = document.getElementById("number").value;
+	//special case to remove "s" from label
 	if (numParticles === 1) {
 		document.getElementById("label").textContent = "1 particle";
 	} else {
 		document.getElementById("label").textContent = `${numParticles} particles`;
 	}
 
+	//add or remove particles to match the desired number
 	if (particles.length < numParticles) {
 		for (let i = particles.length; i < numParticles; i++) {
 			particles.push(new Particle());
@@ -141,38 +152,40 @@ const updateSlider = () => {
 	}
 };
 
-document.getElementById("number").addEventListener("input", updateSlider);
-document.getElementById("reset").addEventListener("click", reset);
-document.getElementById("trails").addEventListener("input", function () {
-	showTrails = this.checked;
-});
-document.getElementById("points").addEventListener("input", function () {
-	particles.forEach((p) => {
-		p.shape.visible = this.checked;
-	});
-});
-document.getElementById("fps").addEventListener("input", function () {
-	if (this.checked) {
-		document.getElementById("fps-holder").style.display = "block";
-	} else {
-		document.getElementById("fps-holder").style.display = "none";
-	}
-});
-document.getElementById("play").addEventListener("click", function () {
-	if (playing) {
-		this.textContent = "Play";
-	} else {
-		this.textContent = "Stop";
-	}
-	playing = !playing;
-});
-
 window.onload = () => {
 	reset();
 
+	//create fps counter
 	stats = new Stats();
 	stats.showPanel(0);
 	document.getElementById("fps-holder").appendChild(stats.dom);
 
-	requestAnimationFrame(animate);
+	requestAnimationFrame(animate); //start render loop
+
+	//event listeners
+	document.getElementById("number").addEventListener("input", updateSlider);
+	document.getElementById("reset").addEventListener("click", reset);
+	document.getElementById("trails").addEventListener("input", function () {
+		showTrails = this.checked;
+	});
+	document.getElementById("points").addEventListener("input", function () {
+		particles.forEach((p) => {
+			p.shape.visible = this.checked;
+		});
+	});
+	document.getElementById("fps").addEventListener("input", function () {
+		if (this.checked) {
+			document.getElementById("fps-holder").style.display = "block";
+		} else {
+			document.getElementById("fps-holder").style.display = "none";
+		}
+	});
+	document.getElementById("play").addEventListener("click", function () {
+		if (playing) {
+			this.textContent = "Play";
+		} else {
+			this.textContent = "Stop";
+		}
+		playing = !playing;
+	});
 };
