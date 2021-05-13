@@ -1,8 +1,5 @@
 import * as THREE from "https://unpkg.com/three@0.126.1/build/three.module.js";
 import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls.js";
-import { Line2 } from "https://unpkg.com/three@0.126.1/examples/jsm/lines/Line2.js";
-import { LineMaterial } from "https://unpkg.com/three@0.126.1/examples/jsm/lines/LineMaterial.js";
-import { LineGeometry } from "https://unpkg.com/three@0.126.1/examples/jsm/lines/LineGeometry.js";
 
 const canvas = document.getElementById("myCanvas");
 const scene = new THREE.Scene();
@@ -51,12 +48,11 @@ class Particle {
 		this.trailPoints[1] = this.pos.y;
 		this.trailPoints[2] = this.pos.z;
 
-		this.numPoints++;
-		if (this.numPoints > maxTrailLength) this.numPoints = maxTrailLength;
+		if (this.numPoints < maxTrailLength) this.numPoints++;
 		const speed = Math.ceil(Math.sqrt(new THREE.Vector3(dx, dy, dz).length()) * 10);
 
-		this.trail.geometry.instaceCount = Math.min(Math.min(speed, this.numPoints));
-		this.trail.geometry.setPositions(this.trailPoints);
+		this.trail.geometry.setDrawRange(1, Math.min(speed, this.numPoints));
+		this.trail.geometry.setAttribute("position", new THREE.BufferAttribute(this.trailPoints, 3));
 	}
 
 	createShape() {
@@ -69,19 +65,21 @@ class Particle {
 	}
 
 	createTrail() {
-		const material = new LineMaterial({
+		const material = new THREE.LineBasicMaterial({
 			color: `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`,
-			linewidth: 0.005,
-			opacity: 0.5,
-			transparent: true,
 		});
-		const geometry = new LineGeometry();
+		const geometry = new THREE.BufferGeometry();
 
 		this.trailPoints = new Float32Array(maxTrailLength * 3);
+		for (let i = 0; i < maxTrailLength * 3; i += 3) {
+			this.trailPoints[i] = this.pos.x;
+			this.trailPoints[i + 1] = this.pos.y;
+			this.trailPoints[i + 2] = this.pos.z;
+		}
 
-		geometry.setPositions(this.trailPoints);
-		geometry.instaceCount = 0;
-		const line = new Line2(geometry, material);
+		geometry.setAttribute("position", new THREE.BufferAttribute(this.trailPoints, 3));
+		geometry.setDrawRange(0, 0);
+		const line = new THREE.Line(geometry, material);
 		scene.add(line);
 		return line;
 	}
@@ -90,7 +88,7 @@ class Particle {
 const reset = () => {
 	particles = [];
 
-	for (let i = 0; i < 50; i++) {
+	for (let i = 0; i < 100; i++) {
 		particles.push(new Particle());
 	}
 
