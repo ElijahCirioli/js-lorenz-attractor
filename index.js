@@ -131,10 +131,10 @@ const animate = () => {
 const updateSlider = () => {
 	numParticles = document.getElementById("number").value;
 	//special case to remove "s" from label
-	if (numParticles === 1) {
+	if (numParticles === "1") {
 		document.getElementById("label").textContent = "1 particle";
 	} else {
-		document.getElementById("label").textContent = `${numParticles} particles`;
+		document.getElementById("label").textContent = numParticles + " particles";
 	}
 
 	//add or remove particles to match the desired number
