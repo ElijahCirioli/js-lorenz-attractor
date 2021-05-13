@@ -4,23 +4,24 @@ import { OrbitControls } from "https://unpkg.com/three@0.126.1/examples/jsm/cont
 const canvas = document.getElementById("myCanvas");
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.001, 1000);
-camera.position.z = 120;
+camera.position.z = 90;
 const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
 
 const controls = new OrbitControls(camera, canvas);
 
-let particles;
+let particles, stats;
 const dt = 0.002;
-const maxTrailLength = 200;
+const maxTrailLength = 120;
+const numParticles = 100;
 const rho = 28;
 const sigma = 10;
 const beta = 8 / 3;
 
 class Particle {
 	constructor() {
-		const x = Math.random() * 20 - 10;
-		const y = Math.random() * 20 - 10;
-		const z = Math.random() * 20 - 10;
+		const x = Math.random() * 30 - 15;
+		const y = Math.random() * 30 - 15;
+		const z = Math.random() * 30 - 15;
 		this.pos = new THREE.Vector3(x, y, z);
 		this.shape = this.createShape();
 
@@ -38,7 +39,7 @@ class Particle {
 		this.pos.z += dz * dt;
 		this.shape.position.set(this.pos.x, this.pos.y, this.pos.z);
 
-		//update trail
+		//update trail (very inefficient)
 		for (let i = maxTrailLength * 3 - 1; i > 4; i -= 3) {
 			this.trailPoints[i] = this.trailPoints[i - 3];
 			this.trailPoints[i - 1] = this.trailPoints[i - 4];
@@ -49,10 +50,13 @@ class Particle {
 		this.trailPoints[2] = this.pos.z;
 
 		if (this.numPoints < maxTrailLength) this.numPoints++;
-		const speed = Math.ceil(Math.sqrt(new THREE.Vector3(dx, dy, dz).length()) * 10);
+		const speed = Math.ceil(Math.sqrt(new THREE.Vector3(dx, dy, dz).length()) * 15);
 
-		this.trail.geometry.setDrawRange(1, Math.min(speed, this.numPoints));
-		this.trail.geometry.setAttribute("position", new THREE.BufferAttribute(this.trailPoints, 3));
+		this.trail.geometry.setDrawRange(0, Math.min(speed, this.numPoints));
+
+		const pos = this.trail.geometry.attributes.position;
+		pos.array = this.trailPoints;
+		pos.needsUpdate = true;
 	}
 
 	createShape() {
@@ -78,7 +82,7 @@ class Particle {
 		}
 
 		geometry.setAttribute("position", new THREE.BufferAttribute(this.trailPoints, 3));
-		geometry.setDrawRange(0, 0);
+		geometry.setDrawRange(0, this.numPoints);
 		const line = new THREE.Line(geometry, material);
 		scene.add(line);
 		return line;
@@ -88,21 +92,28 @@ class Particle {
 const reset = () => {
 	particles = [];
 
-	for (let i = 0; i < 100; i++) {
+	for (let i = 0; i < numParticles; i++) {
 		particles.push(new Particle());
 	}
+
+	stats = new Stats();
+	stats.showPanel(0);
+	document.body.appendChild(stats.dom);
 
 	requestAnimationFrame(animate);
 };
 
 const animate = () => {
-	requestAnimationFrame(animate);
+	stats.begin();
 
 	particles.forEach((p) => {
 		p.move();
 	});
 
 	renderer.render(scene, camera); //render the scene
+
+	stats.end();
+	requestAnimationFrame(animate);
 };
 
 document.onload = reset();
