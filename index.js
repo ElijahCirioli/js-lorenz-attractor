@@ -75,6 +75,7 @@ class Particle {
 		const material = new THREE.MeshBasicMaterial({ color: "#16e086" });
 		const shape = new THREE.Mesh(geometry, material);
 		shape.position.set(this.pos.x, this.pos.y, this.pos.z);
+		shape.visible = document.getElementById("points").checked;
 		scene.add(shape);
 		return shape;
 	}
